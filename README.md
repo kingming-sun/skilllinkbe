@@ -1,116 +1,85 @@
-# Python FastAPI 后端
+# SkillLink 后端 API
 
-这是一个使用 FastAPI 构建的现代化 Python 后端 API 服务。
+基于 FastAPI 的 RESTful API 服务
 
-## 功能特性
+## 🚀 快速开始
 
-- ✅ RESTful API 接口
-- ✅ CORS 跨域支持
-- ✅ 数据验证（Pydantic）
-- ✅ 自动生成 API 文档
-- ✅ 异步处理
-
-## 技术栈
-
-- **FastAPI** - 现代化、高性能的 Web 框架
-- **Uvicorn** - ASGI 服务器
-- **Pydantic** - 数据验证
-
-## 快速开始
-
-### 1. 安装依赖
+### 安装依赖
 
 ```bash
-# 创建虚拟环境（推荐）
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# 安装依赖包
 pip install -r requirements.txt
 ```
 
-### 2. 运行开发服务器
+### 启动服务
 
 ```bash
-# 方式 1：使用 Python 直接运行
 python main.py
-
-# 方式 2：使用 uvicorn 命令
+# 或
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-服务器将在 http://localhost:8000 启动
-
-### 3. 查看 API 文档
-
-FastAPI 自动生成交互式 API 文档：
+### 访问 API 文档
 
 - **Swagger UI**: http://localhost:8000/docs
 - **ReDoc**: http://localhost:8000/redoc
 
-## API 接口
-
-### 健康检查
-```
-GET /api/health
-```
-
-### 获取所有项目
-```
-GET /api/items
-```
-
-### 获取单个项目
-```
-GET /api/items/{item_id}
-```
-
-### 创建项目
-```
-POST /api/items
-Body: {
-  "name": "项目名称",
-  "description": "项目描述",
-  "completed": false
-}
-```
-
-### 更新项目
-```
-PUT /api/items/{item_id}
-Body: {
-  "name": "更新的名称",
-  "description": "更新的描述",
-  "completed": true
-}
-```
-
-### 删除项目
-```
-DELETE /api/items/{item_id}
-```
-
-## 项目结构
+## 📁 项目结构
 
 ```
 backend/
-├── main.py              # 主应用文件
-├── requirements.txt     # 依赖包列表
-├── .gitignore          # Git 忽略文件
-└── README.md           # 项目文档
+├── main.py              # FastAPI 主应用和路由
+├── models.py            # Pydantic 数据模型
+├── database.py          # 模拟数据库
+└── requirements.txt     # Python 依赖
 ```
 
-## 开发建议
+## 🔑 API 端点
 
-1. **添加数据库**: 集成 SQLAlchemy 或 Tortoise ORM
-2. **用户认证**: 添加 JWT 认证
-3. **环境变量**: 使用 python-dotenv 管理配置
-4. **测试**: 使用 pytest 编写单元测试
-5. **日志**: 配置结构化日志
+### 认证
+- `POST /api/auth/register` - 注册
+- `POST /api/auth/login` - 登录
+- `GET /api/auth/me` - 获取当前用户
 
-## 扩展阅读
+### 技能
+- `GET /api/skills` - 获取技能列表（支持筛选）
+- `GET /api/skills/{id}` - 获取技能详情
+- `POST /api/skills` - 创建技能
+- `GET /api/skills/{id}/reviews` - 获取评价
 
-- [FastAPI 官方文档](https://fastapi.tiangolo.com/zh/)
-- [Pydantic 文档](https://docs.pydantic.dev/)
-- [Uvicorn 文档](https://www.uvicorn.org/)
+### 订单
+- `GET /api/orders` - 获取订单列表
+- `GET /api/orders/{id}` - 获取订单详情
+- `POST /api/orders` - 创建订单
+- `PATCH /api/orders/{id}/status` - 更新订单状态
 
+### 评价
+- `POST /api/reviews` - 创建评价
+
+### 统计
+- `GET /api/stats` - 平台统计
+- `GET /api/categories` - 分类统计
+
+## 🗄️ 数据模型
+
+详见 `models.py`
+
+## 🔧 配置
+
+CORS 已配置为允许来自前端的请求：
+- http://localhost:3000
+- http://localhost:5173
+
+## 📝 注意事项
+
+当前使用内存模拟数据库，重启后数据会丢失。生产环境应集成真实数据库。
+
+## 🚀 未来改进
+
+- [ ] 集成 PostgreSQL/MySQL
+- [ ] JWT 认证
+- [ ] 环境变量配置
+- [ ] 日志系统
+- [ ] 单元测试
+- [ ] Docker 化
