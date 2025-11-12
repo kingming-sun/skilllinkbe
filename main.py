@@ -1,13 +1,12 @@
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
 import math
 
 from models import (
-    User, UserCreate, UserLogin, UserProfile, TokenResponse,
+    User, UserProfile,
     Skill, SkillCreate, SkillListResponse,
     Order, OrderCreate, OrderStatus, OrderStatusUpdate, OrderListResponse,
     Review, ReviewCreate, ReviewListResponse,
@@ -19,6 +18,8 @@ from db_models import Base, UserModel, SkillModel, OrderModel, ReviewModel
 import crud
 from database import generate_order_number
 from config import settings
+from auth import get_current_user_from_token, get_optional_current_user
+from user_service import get_or_create_user
 
 # 创建数据库表
 Base.metadata.create_all(bind=engine)
@@ -38,24 +39,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-security = HTTPBearer()
-
-
 # ============= 辅助函数 =============
 
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    auth_payload: dict = Depends(get_current_user_from_token),
     db: Session = Depends(get_db)
-):
-    """获取当前登录用户（简化版，实际应使用JWT）"""
-    try:
-        user_id = int(credentials.credentials)
-        user = crud.get_user_by_id(db, user_id)
-        if not user:
-            raise HTTPException(status_code=401, detail="未授权")
-        return user
-    except:
-        raise HTTPException(status_code=401, detail="无效的token")
+) -> UserModel:
+    """
+    获取当前登录用户（使用 Stack Auth JWT）
+    自动同步用户到本地数据库
+    """
+    user = get_or_create_user(db, auth_payload)
+    return user
 
 
 def user_model_to_dict(user: UserModel) -> User:
@@ -178,39 +173,7 @@ async def health_check(db: Session = Depends(get_db)):
         }
 
 
-# ============= 用户认证 =============
-
-@app.post("/api/auth/register", response_model=TokenResponse)
-async def register(user_data: UserCreate, db: Session = Depends(get_db)):
-    """用户注册"""
-    # 检查邮箱是否已存在
-    if crud.get_user_by_email(db, user_data.email):
-        raise HTTPException(status_code=400, detail="邮箱已被注册")
-    
-    # 创建新用户
-    new_user = crud.create_user(db, user_data)
-    
-    # 返回token（简化版：直接返回用户ID）
-    return TokenResponse(
-        access_token=str(new_user.id),
-        user=user_model_to_dict(new_user)
-    )
-
-
-@app.post("/api/auth/login", response_model=TokenResponse)
-async def login(credentials: UserLogin, db: Session = Depends(get_db)):
-    """用户登录"""
-    user = crud.get_user_by_email(db, credentials.email)
-    
-    if not user or user.password != credentials.password:
-        raise HTTPException(status_code=401, detail="邮箱或密码错误")
-    
-    # 返回token（简化版：直接返回用户ID）
-    return TokenResponse(
-        access_token=str(user.id),
-        user=user_model_to_dict(user)
-    )
-
+# ============= 用户认证（使用 Stack Auth）=============
 
 @app.get("/api/auth/me", response_model=UserProfile)
 async def get_current_user_profile(
