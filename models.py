@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Any
 from pydantic import BaseModel, EmailStr, Field
 from enum import Enum
 
@@ -237,7 +237,7 @@ class PaginatedResponse(BaseModel):
     page: int
     page_size: int
     total_pages: int
-    items: List[any]
+    items: List[Any]
 
 
 class SkillListResponse(BaseModel):
