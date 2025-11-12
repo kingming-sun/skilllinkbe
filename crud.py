@@ -11,6 +11,7 @@ from models import (
     UserCreate, SkillCreate, OrderCreate, ReviewCreate,
     UserRole, SkillCategory, ServiceMode, OrderStatus
 )
+from security import get_password_hash, verify_password
 
 
 # ============= User CRUD =============
@@ -26,11 +27,11 @@ def get_user_by_id(db: Session, user_id: int) -> Optional[UserModel]:
 
 
 def create_user(db: Session, user: UserCreate) -> UserModel:
-    """创建用户"""
+    """创建用户（密码已加密）"""
     db_user = UserModel(
         email=user.email,
         username=user.username,
-        password=user.password,  # 实际应该加密
+        password=get_password_hash(user.password),  # 加密密码
         phone=user.phone,
         role=user.role,
         avatar=f"https://api.dicebear.com/7.x/avataaars/svg?seed={user.username}",
@@ -41,6 +42,16 @@ def create_user(db: Session, user: UserCreate) -> UserModel:
     db.commit()
     db.refresh(db_user)
     return db_user
+
+
+def authenticate_user(db: Session, email: str, password: str) -> Optional[UserModel]:
+    """验证用户登录"""
+    user = get_user_by_email(db, email)
+    if not user:
+        return None
+    if not verify_password(password, user.password):
+        return None
+    return user
 
 
 # ============= Skill CRUD =============
